@@ -1,0 +1,976 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+#cl-root, #cl-root * { box-sizing: border-box; }
+
+#cl-root {
+  --bg: #1C1B22;
+  --surface: #24222C;
+  --surface-2: #2E2B37;
+  --surface-3: #38354280;
+  --border: #3A3745;
+  --text: #F3EEE3;
+  --text-muted: #A79FB0;
+  --text-faint: #6E6879;
+  --accent-a: #F2A65A;
+  --accent-a-soft: rgba(242,166,90,0.16);
+  --accent-b: #4FB6A8;
+  --accent-b-soft: rgba(79,182,168,0.16);
+  --danger: #E8646B;
+  --danger-soft: rgba(232,100,107,0.14);
+  --success: #86D99C;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 28px 14px 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#cl-app {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- header ---------- */
+.cl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+  animation: cl-drop 0.5s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-brand { display: flex; align-items: center; gap: 10px; }
+.cl-brand-mark {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.cl-brand h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+.cl-brand p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.cl-gear {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: transform .25s ease, color .2s ease, border-color .2s ease;
+}
+.cl-gear:hover { color: var(--text); border-color: var(--text-faint); transform: rotate(28deg); }
+.cl-gear:active { transform: rotate(55deg) scale(0.92); }
+
+/* ---------- hero balance card ---------- */
+.cl-hero {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface) 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 26px 22px 22px;
+  position: relative;
+  overflow: hidden;
+  animation: cl-rise 0.55s 0.05s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-hero::before{
+  content:"";
+  position:absolute; inset:0;
+  background: radial-gradient(120% 90% at 15% -10%, var(--accent-a-soft), transparent 55%),
+              radial-gradient(120% 90% at 100% 110%, var(--accent-b-soft), transparent 55%);
+  pointer-events:none;
+}
+.cl-hero-content { position: relative; z-index: 1; }
+
+.cl-scale-wrap { display:flex; justify-content:center; margin-bottom: 6px; }
+.cl-scale-beam { transition: transform .6s cubic-bezier(.34,1.4,.4,1); transform-origin: 90px 34px; }
+
+.cl-hero-names {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+.cl-name-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 600;
+}
+.cl-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.cl-hero-verdict {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+.cl-hero-amount {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.cl-hero-amount.owe-a { color: var(--accent-a); }
+.cl-hero-amount.owe-b { color: var(--accent-b); }
+.cl-hero-amount.settled { color: var(--success); font-size: 26px; }
+
+.cl-settle-btn {
+  display: block;
+  margin: 18px auto 0;
+  padding: 11px 26px;
+  border-radius: 100px;
+  border: none;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: transform .15s ease, opacity .2s ease;
+}
+.cl-settle-btn:hover { opacity: 0.88; }
+.cl-settle-btn:active { transform: scale(0.96); }
+.cl-settle-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* ---------- section headers ---------- */
+.cl-section-label {
+  font-size: 11.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+/* ---------- add expense card ---------- */
+.cl-add-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  animation: cl-rise 0.55s 0.1s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-field { margin-bottom: 14px; }
+.cl-field:last-child { margin-bottom: 0; }
+.cl-field label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-bottom: 7px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.cl-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 11px 13px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color .15s ease;
+}
+.cl-input::placeholder { color: var(--text-faint); }
+.cl-input:focus { border-color: var(--text-faint); }
+.cl-input.cl-amount { font-family: var(--font-mono); font-size: 17px; font-weight: 600; }
+
+.cl-row2 { display: flex; gap: 10px; }
+.cl-row2 > div { flex: 1; }
+
+.cl-cat-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.cl-cat-btn {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 17px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.cl-cat-btn.active { border-color: var(--text); background: var(--surface-3); transform: scale(1.06); }
+
+.cl-toggle-row { display: flex; gap: 8px; }
+.cl-toggle-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border-radius: 11px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.cl-toggle-btn.active.a { border-color: var(--accent-a); background: var(--accent-a-soft); color: var(--accent-a); }
+.cl-toggle-btn.active.b { border-color: var(--accent-b); background: var(--accent-b-soft); color: var(--accent-b); }
+
+.cl-split-mode { display: flex; gap: 8px; margin-bottom: 10px; }
+.cl-split-mode button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cl-split-mode button.active { background: var(--surface-3); color: var(--text); border-color: var(--text-faint); }
+
+.cl-slider-wrap { padding: 4px 2px 0; }
+.cl-slider {
+  width: 100%;
+  accent-color: var(--text);
+  height: 4px;
+}
+.cl-split-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--text-muted);
+}
+
+.cl-submit-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #1C1B22;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: transform .15s ease, opacity .2s ease;
+}
+.cl-submit-btn:hover { opacity: 0.92; }
+.cl-submit-btn:active { transform: scale(0.98); }
+
+/* ---------- ledger list ---------- */
+.cl-ledger {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 18px 10px;
+  animation: cl-rise 0.55s 0.15s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-ledger-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+.cl-ledger-head h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.cl-ledger-total {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cl-spine { position: relative; padding-left: 18px; }
+.cl-spine::before {
+  content: "";
+  position: absolute;
+  left: 5px; top: 4px; bottom: 4px;
+  width: 1px;
+  background-image: linear-gradient(var(--border) 60%, transparent 0%);
+  background-size: 1px 8px;
+  background-repeat: repeat-y;
+}
+
+.cl-day-group { margin-bottom: 4px; }
+.cl-day-label {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin: 14px 0 8px;
+  position: relative;
+}
+.cl-day-label::before{
+  content:"";
+  position:absolute; left:-18px; top:50%; transform: translateY(-50%);
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--text-faint);
+}
+
+.cl-entry {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  transition: background .15s ease;
+  animation: cl-entry-in .35s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-entry:hover { background: var(--surface-2); }
+.cl-entry-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.cl-entry-mid { flex: 1; min-width: 0; }
+.cl-entry-desc { font-size: 14px; font-weight: 500; }
+.cl-entry-meta {
+  font-size: 11.5px; color: var(--text-faint);
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.cl-entry-right { text-align: right; flex-shrink: 0; }
+.cl-entry-amount {
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cl-entry-del {
+  background: none; border: none; color: var(--text-faint);
+  font-size: 11px; cursor: pointer; padding: 3px 0 0;
+  opacity: 0; transition: opacity .15s ease;
+}
+.cl-entry:hover .cl-entry-del { opacity: 1; }
+.cl-entry-del:hover { color: var(--danger); }
+
+.cl-empty {
+  text-align: center;
+  padding: 30px 10px 22px;
+  color: var(--text-faint);
+}
+.cl-empty-icon { font-size: 30px; margin-bottom: 8px; }
+.cl-empty p { font-size: 13px; margin: 0; }
+
+/* ---------- settlement history ---------- */
+.cl-history-toggle {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+  padding: 12px 0 2px;
+  cursor: pointer;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+.cl-history-toggle:hover { color: var(--text-muted); }
+.cl-history-list { padding: 6px 4px 10px; }
+.cl-history-item {
+  display: flex; justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  padding: 7px 2px;
+  border-bottom: 1px dashed var(--border);
+}
+.cl-history-item span:last-child { font-family: var(--font-mono); color: var(--success); }
+
+/* ---------- footer ---------- */
+.cl-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 6px 0 0;
+}
+.cl-footer button {
+  background: none; border: none; color: var(--text-faint);
+  text-decoration: underline; cursor: pointer; font-size: 11px; padding: 0;
+}
+.cl-footer button:hover { color: var(--danger); }
+
+/* ---------- modal ---------- */
+.cl-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,9,13,0.6);
+  backdrop-filter: blur(3px);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 50;
+  animation: cl-fade .2s ease both;
+  padding: 0;
+}
+.cl-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 24px 20px 28px;
+  width: 100%;
+  max-width: 460px;
+  animation: cl-modal-up .28s cubic-bezier(.2,.8,.2,1) both;
+}
+.cl-modal h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  margin: 0 0 16px;
+}
+.cl-modal-close-row { display: flex; gap: 10px; margin-top: 18px; }
+.cl-modal-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.cl-modal-btn.primary {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+}
+
+/* ---------- loading ---------- */
+.cl-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 50vh;
+  color: var(--text-faint);
+  font-size: 13px;
+  gap: 10px;
+}
+.cl-spinner {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent-a);
+  animation: cl-spin 0.8s linear infinite;
+}
+
+@keyframes cl-spin { to { transform: rotate(360deg); } }
+@keyframes cl-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cl-modal-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes cl-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes cl-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes cl-entry-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #cl-root *, #cl-root *::before { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 380px) {
+  .cl-hero-amount { font-size: 33px; }
+}
+</style>
+
+<div id="cl-root">
+  <div id="cl-app"><div class="cl-loading"><div class="cl-spinner"></div><div>正在打開帳本…</div></div></div>
+</div>
+
+<script>
+(function(){
+  const CATS = [
+    {key:'food', icon:'🍽️', label:'餐飲'},
+    {key:'life', icon:'🛒', label:'生活'},
+    {key:'fun', icon:'🎬', label:'娛樂'},
+    {key:'transport', icon:'🚗', label:'交通'},
+    {key:'home', icon:'🏠', label:'居家'},
+    {key:'other', icon:'✨', label:'其他'},
+  ];
+  const STORAGE_KEY = 'couple-ledger-data-v1';
+
+  let state = null;      // {partners:{a:{name},b:{name}}, expenses:[], settlements:[]}
+  let ui = {
+    desc: '',
+    amount: '',
+    catKey: 'other',
+    paidBy: 'a',
+    splitMode: 'equal',  // 'equal' | 'custom'
+    splitA: 50,
+    modal: null,          // null | 'settings' | 'settle' | 'history'
+  };
+  let loaded = false;
+
+  const fmt = n => new Intl.NumberFormat('zh-TW', {maximumFractionDigits: 0}).format(Math.round(n));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+  function defaultData(){
+    return {
+      partners: { a: { name: '阿翔' }, b: { name: '小美' } },
+      expenses: [],
+      settlements: []
+    };
+  }
+
+  async function loadData(){
+    try {
+      const res = await window.storage.get(STORAGE_KEY, true);
+      state = res && res.value ? JSON.parse(res.value) : defaultData();
+    } catch (e) {
+      state = defaultData();
+    }
+    loaded = true;
+    render();
+  }
+
+  async function saveData(){
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    } catch (e) {
+      console.error('儲存失敗', e);
+    }
+  }
+
+  function computeBalance(){
+    // positive => b owes a ; negative => a owes b
+    let bal = 0;
+    for (const ex of state.expenses){
+      const shareA = ex.amount * (ex.splitA/100);
+      const shareB = ex.amount - shareA;
+      if (ex.paidBy === 'a') bal += shareB;
+      else bal -= shareA;
+    }
+    for (const s of state.settlements){
+      if (s.from === 'b') bal -= s.amount; // b paid a
+      else bal += s.amount; // a paid b
+    }
+    return bal;
+  }
+
+  function groupByDay(expenses){
+    const groups = {};
+    const sorted = [...expenses].sort((x,y)=> y.date.localeCompare(x.date) || y.createdAt - x.createdAt);
+    for (const ex of sorted){
+      (groups[ex.date] = groups[ex.date] || []).push(ex);
+    }
+    return groups;
+  }
+
+  function formatDay(dateStr){
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((today - d)/86400000);
+    const wk = ['日','一','二','三','四','五','六'][d.getDay()];
+    if (diff === 0) return '今天';
+    if (diff === 1) return '昨天';
+    return `${d.getMonth()+1}月${d.getDate()}日 (週${wk})`;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- render ----------
+  function render(){
+    const app = document.getElementById('cl-app');
+    if (!loaded){ return; }
+
+    // remember focus / cursor / scroll so re-rendering doesn't feel like a page reload
+    const active = document.activeElement;
+    const activeId = active && active.id;
+    const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+    const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+    const scrollY = window.scrollY;
+
+    const nameA = state.partners.a.name;
+    const nameB = state.partners.b.name;
+    const bal = computeBalance();
+    const total = state.expenses.reduce((s,e)=>s+e.amount,0);
+
+    let verdictHtml, amountHtml;
+    if (Math.abs(bal) < 1){
+      verdictHtml = `目前收支平衡`;
+      amountHtml = `<div class="cl-hero-amount settled">已結清 🎉</div>`;
+    } else if (bal > 0){
+      verdictHtml = `<span style="color:var(--accent-b)">${escapeHtml(nameB)}</span> 該付給 <span style="color:var(--accent-a)">${escapeHtml(nameA)}</span>`;
+      amountHtml = `<div class="cl-hero-amount owe-a">NT$ ${fmt(bal)}</div>`;
+    } else {
+      verdictHtml = `<span style="color:var(--accent-a)">${escapeHtml(nameA)}</span> 該付給 <span style="color:var(--accent-b)">${escapeHtml(nameB)}</span>`;
+      amountHtml = `<div class="cl-hero-amount owe-b">NT$ ${fmt(Math.abs(bal))}</div>`;
+    }
+
+    // tilt: positive bal => b owes => b(right) pan sinks => rotate beam clockwise-ish
+    const angle = Math.max(-10, Math.min(10, bal === 0 ? 0 : (bal>0 ? 7 : -7)));
+
+    const groups = groupByDay(state.expenses);
+    const dayKeys = Object.keys(groups).sort((x,y)=> y.localeCompare(x));
+
+    let listHtml;
+    if (state.expenses.length === 0){
+      listHtml = `
+        <div class="cl-empty">
+          <div class="cl-empty-icon">📖</div>
+          <p>帳本還是空的，新增第一筆支出吧</p>
+        </div>`;
+    } else {
+      listHtml = `<div class="cl-spine">` + dayKeys.map(day => {
+        const items = groups[day];
+        const rows = items.map(ex => {
+          const cat = CATS.find(c=>c.key===ex.cat) || CATS[CATS.length-1];
+          const payerName = ex.paidBy === 'a' ? nameA : nameB;
+          const payerColor = ex.paidBy === 'a' ? 'var(--accent-a)' : 'var(--accent-b)';
+          const splitTxt = ex.splitA === 50 ? '平分' : `${escapeHtml(nameA)} ${ex.splitA}% / ${escapeHtml(nameB)} ${100-ex.splitA}%`;
+          return `
+            <div class="cl-entry">
+              <div class="cl-entry-icon">${cat.icon}</div>
+              <div class="cl-entry-mid">
+                <div class="cl-entry-desc">${escapeHtml(ex.desc) || cat.label}</div>
+                <div class="cl-entry-meta">
+                  <span class="cl-dot" style="background:${payerColor}"></span>
+                  ${escapeHtml(payerName)}付款 · ${splitTxt}
+                </div>
+              </div>
+              <div class="cl-entry-right">
+                <div class="cl-entry-amount">NT$ ${fmt(ex.amount)}</div>
+                <button class="cl-entry-del" onclick="clDeleteExpense('${ex.id}')">刪除</button>
+              </div>
+            </div>`;
+        }).join('');
+        return `<div class="cl-day-group"><div class="cl-day-label">${formatDay(day)}</div>${rows}</div>`;
+      }).join('') + `</div>`;
+    }
+
+    const histCount = state.settlements.length;
+    const historyHtml = histCount === 0 ? '' : `
+      <div class="cl-history-toggle" onclick="clOpenModal('history')">查看結清紀錄 (${histCount})</div>`;
+
+    app.innerHTML = `
+      <div class="cl-header">
+        <div class="cl-brand">
+          <div class="cl-brand-mark">💞</div>
+          <div>
+            <h1>共同帳本</h1>
+            <p>${escapeHtml(nameA)} &amp; ${escapeHtml(nameB)} 的 AA 分帳</p>
+          </div>
+        </div>
+        <div class="cl-gear" onclick="clOpenModal('settings')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+      </div>
+
+      <div class="cl-hero">
+        <div class="cl-hero-content">
+          <div class="cl-scale-wrap">
+            <svg width="180" height="70" viewBox="0 0 180 70">
+              <line x1="90" y1="34" x2="90" y2="62" stroke="var(--border)" stroke-width="3" stroke-linecap="round"/>
+              <polygon points="90,62 76,68 104,68" fill="var(--border)"/>
+              <g class="cl-scale-beam" style="transform: rotate(${angle}deg)">
+                <line x1="18" y1="14" x2="162" y2="14" stroke="var(--text-faint)" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="18" y1="14" x2="18" y2="30" stroke="var(--text-faint)" stroke-width="1.5"/>
+                <line x1="162" y1="14" x2="162" y2="30" stroke="var(--text-faint)" stroke-width="1.5"/>
+                <circle cx="18" cy="34" r="9" fill="var(--accent-a)"/>
+                <circle cx="162" cy="34" r="9" fill="var(--accent-b)"/>
+                <circle cx="90" cy="14" r="3.5" fill="var(--text-faint)"/>
+              </g>
+            </svg>
+          </div>
+          <div class="cl-hero-names">
+            <span class="cl-name-chip"><span class="cl-dot" style="background:var(--accent-a)"></span>${escapeHtml(nameA)}</span>
+            <span style="opacity:.4">·</span>
+            <span class="cl-name-chip"><span class="cl-dot" style="background:var(--accent-b)"></span>${escapeHtml(nameB)}</span>
+          </div>
+          <div class="cl-hero-verdict">${verdictHtml}</div>
+          ${amountHtml}
+          <button class="cl-settle-btn" ${Math.abs(bal)<1 ? 'disabled' : ''} onclick="clOpenModal('settle')">一鍵結清</button>
+        </div>
+      </div>
+
+      <div class="cl-add-card">
+        <div class="cl-section-label" style="margin-bottom:14px;">新增支出</div>
+        <div class="cl-field">
+          <label>項目</label>
+          <input class="cl-input" id="cl-desc" placeholder="例如：晚餐、電影票、加油" value="${escapeHtml(ui.desc)}" oninput="clSetDesc(this.value)" />
+        </div>
+        <div class="cl-row2">
+          <div class="cl-field">
+            <label>金額</label>
+            <input class="cl-input cl-amount" id="cl-amount" type="number" inputmode="decimal" placeholder="0" value="${escapeHtml(ui.amount)}" oninput="clSetAmount(this.value)" />
+          </div>
+        </div>
+        <div class="cl-field">
+          <label>分類</label>
+          <div class="cl-cat-row">
+            ${CATS.map(c => `<div class="cl-cat-btn ${ui.catKey===c.key?'active':''}" id="cl-cat-${c.key}" onclick="clSetCat('${c.key}')" title="${c.label}">${c.icon}</div>`).join('')}
+          </div>
+        </div>
+        <div class="cl-field">
+          <label>誰付的錢</label>
+          <div class="cl-toggle-row">
+            <div class="cl-toggle-btn a ${ui.paidBy==='a'?'active':''}" id="cl-paidby-a" onclick="clSetPaidBy('a')"><span class="cl-dot" style="background:var(--accent-a)"></span>${escapeHtml(nameA)}</div>
+            <div class="cl-toggle-btn b ${ui.paidBy==='b'?'active':''}" id="cl-paidby-b" onclick="clSetPaidBy('b')"><span class="cl-dot" style="background:var(--accent-b)"></span>${escapeHtml(nameB)}</div>
+          </div>
+        </div>
+        <div class="cl-field">
+          <label>怎麼分</label>
+          <div class="cl-split-mode">
+            <button id="cl-splitmode-equal" class="${ui.splitMode==='equal'?'active':''}" onclick="clSetSplitMode('equal')">平分 (AA)</button>
+            <button id="cl-splitmode-custom" class="${ui.splitMode==='custom'?'active':''}" onclick="clSetSplitMode('custom')">自訂比例</button>
+          </div>
+          <div class="cl-slider-wrap" id="cl-slider-wrap" style="display:${ui.splitMode === 'custom' ? '' : 'none'}">
+            <input class="cl-slider" id="cl-split-slider" type="range" min="0" max="100" value="${ui.splitA}" oninput="clLiveSplitA(this.value)" onchange="clSetSplitA(this.value)" />
+            <div class="cl-split-labels">
+              <span id="cl-split-label-a">${escapeHtml(nameA)} ${ui.splitA}%</span>
+              <span id="cl-split-label-b">${escapeHtml(nameB)} ${100-ui.splitA}%</span>
+            </div>
+          </div>
+        </div>
+        <button class="cl-submit-btn" onclick="clAddExpense()">加入帳本</button>
+      </div>
+
+      <div class="cl-ledger">
+        <div class="cl-ledger-head">
+          <h2>支出紀錄</h2>
+          <div class="cl-ledger-total">共 NT$ ${fmt(total)}</div>
+        </div>
+        ${listHtml}
+        ${historyHtml}
+      </div>
+
+      <div class="cl-footer">
+        <button onclick="clOpenModal('reset')">清除所有資料</button>
+      </div>
+
+      ${renderModal(nameA, nameB, bal)}
+    `;
+
+    // restore focus / cursor / scroll after the DOM swap
+    if (activeId){
+      const el = document.getElementById(activeId);
+      if (el){
+        el.focus();
+        if (selStart !== null && el.setSelectionRange){
+          try { el.setSelectionRange(selStart, selEnd); } catch(e){}
+        }
+      }
+    }
+    window.scrollTo(0, scrollY);
+  }
+
+  function renderModal(nameA, nameB, bal){
+    if (!ui.modal) return '';
+
+    if (ui.modal === 'settings'){
+      return `
+        <div class="cl-modal-overlay" onclick="clCloseModalBg(event)">
+          <div class="cl-modal" onclick="event.stopPropagation()">
+            <h3>編輯兩人的名字</h3>
+            <div class="cl-field">
+              <label>對方 A（琥珀色）</label>
+              <input class="cl-input" id="cl-name-a" value="${escapeHtml(nameA)}" />
+            </div>
+            <div class="cl-field">
+              <label>對方 B（青色）</label>
+              <input class="cl-input" id="cl-name-b" value="${escapeHtml(nameB)}" />
+            </div>
+            <div class="cl-modal-close-row">
+              <button class="cl-modal-btn" onclick="clCloseModal()">取消</button>
+              <button class="cl-modal-btn primary" onclick="clSaveNames()">儲存</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    if (ui.modal === 'settle'){
+      const who = bal > 0 ? nameB : nameA;
+      const whom = bal > 0 ? nameA : nameB;
+      return `
+        <div class="cl-modal-overlay" onclick="clCloseModalBg(event)">
+          <div class="cl-modal" onclick="event.stopPropagation()">
+            <h3>結清帳目</h3>
+            <p style="color:var(--text-muted); font-size:13.5px; margin:-8px 0 16px;">
+              ${escapeHtml(who)} 付給 ${escapeHtml(whom)} NT$ ${fmt(Math.abs(bal))}，結清後餘額歸零。
+            </p>
+            <div class="cl-modal-close-row">
+              <button class="cl-modal-btn" onclick="clCloseModal()">取消</button>
+              <button class="cl-modal-btn primary" onclick="clSettleUp()">確認已付款</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    if (ui.modal === 'history'){
+      const items = [...state.settlements].sort((x,y)=>y.createdAt-x.createdAt);
+      const rows = items.map(s => `
+        <div class="cl-history-item">
+          <span>${escapeHtml(s.from === 'a' ? nameA : nameB)} → ${escapeHtml(s.from === 'a' ? nameB : nameA)} · ${s.date}</span>
+          <span>NT$ ${fmt(s.amount)}</span>
+        </div>`).join('') || '<div class="cl-empty"><p>還沒有結清紀錄</p></div>';
+      return `
+        <div class="cl-modal-overlay" onclick="clCloseModalBg(event)">
+          <div class="cl-modal" onclick="event.stopPropagation()">
+            <h3>結清紀錄</h3>
+            <div class="cl-history-list">${rows}</div>
+            <div class="cl-modal-close-row">
+              <button class="cl-modal-btn primary" onclick="clCloseModal()">關閉</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    if (ui.modal === 'reset'){
+      return `
+        <div class="cl-modal-overlay" onclick="clCloseModalBg(event)">
+          <div class="cl-modal" onclick="event.stopPropagation()">
+            <h3>清除所有資料？</h3>
+            <p style="color:var(--text-muted); font-size:13.5px; margin:-8px 0 16px;">
+              這會刪除所有支出與結清紀錄，且無法復原。
+            </p>
+            <div class="cl-modal-close-row">
+              <button class="cl-modal-btn" onclick="clCloseModal()">取消</button>
+              <button class="cl-modal-btn primary" style="background:var(--danger)" onclick="clResetAll()">確定清除</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    return '';
+  }
+
+  // ---------- handlers (exposed on window) ----------
+  window.clSetDesc = (v) => { ui.desc = v; };
+  window.clSetAmount = (v) => { ui.amount = v; };
+
+  window.clSetCat = (k) => {
+    if (ui.catKey === k) return;
+    const prevEl = document.getElementById('cl-cat-' + ui.catKey);
+    if (prevEl) prevEl.classList.remove('active');
+    ui.catKey = k;
+    const nextEl = document.getElementById('cl-cat-' + k);
+    if (nextEl) nextEl.classList.add('active');
+  };
+
+  window.clSetPaidBy = (p) => {
+    if (ui.paidBy === p) return;
+    const prevEl = document.getElementById('cl-paidby-' + ui.paidBy);
+    if (prevEl) prevEl.classList.remove('active');
+    ui.paidBy = p;
+    const nextEl = document.getElementById('cl-paidby-' + p);
+    if (nextEl) nextEl.classList.add('active');
+  };
+
+  window.clSetSplitMode = (m) => {
+    if (ui.splitMode === m) return;
+    document.getElementById('cl-splitmode-' + ui.splitMode).classList.remove('active');
+    ui.splitMode = m;
+    if (m === 'equal') ui.splitA = 50;
+    document.getElementById('cl-splitmode-' + m).classList.add('active');
+    const wrap = document.getElementById('cl-slider-wrap');
+    if (wrap) wrap.style.display = m === 'custom' ? '' : 'none';
+    const slider = document.getElementById('cl-split-slider');
+    if (slider) slider.value = ui.splitA;
+    const nameA = state.partners.a.name, nameB = state.partners.b.name;
+    const la = document.getElementById('cl-split-label-a');
+    const lb = document.getElementById('cl-split-label-b');
+    if (la) la.textContent = `${nameA} ${ui.splitA}%`;
+    if (lb) lb.textContent = `${nameB} ${100 - ui.splitA}%`;
+  };
+  window.clSetSplitA = (v) => { ui.splitA = Number(v); render(); };
+  window.clLiveSplitA = (v) => {
+    // update labels directly while dragging so the slider element is never replaced mid-drag
+    ui.splitA = Number(v);
+    const nameA = state.partners.a.name, nameB = state.partners.b.name;
+    const la = document.getElementById('cl-split-label-a');
+    const lb = document.getElementById('cl-split-label-b');
+    if (la) la.textContent = `${nameA} ${ui.splitA}%`;
+    if (lb) lb.textContent = `${nameB} ${100 - ui.splitA}%`;
+  };
+
+  window.clAddExpense = async () => {
+    const desc = (ui.desc || '').trim();
+    const amount = parseFloat(ui.amount);
+    if (!amount || amount <= 0){
+      const amountEl = document.getElementById('cl-amount');
+      if (amountEl){
+        amountEl.focus();
+        amountEl.style.borderColor = 'var(--danger)';
+        setTimeout(()=>{ amountEl.style.borderColor = ''; }, 900);
+      }
+      return;
+    }
+    const today = new Date();
+    const dateStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    state.expenses.push({
+      id: uid(),
+      desc, amount,
+      cat: ui.catKey,
+      paidBy: ui.paidBy,
+      splitA: ui.splitMode === 'equal' ? 50 : ui.splitA,
+      date: dateStr,
+      createdAt: Date.now()
+    });
+    ui.desc = ''; ui.amount = ''; ui.catKey = 'other'; ui.splitMode = 'equal'; ui.splitA = 50;
+    await saveData();
+    render();
+  };
+
+  window.clDeleteExpense = async (id) => {
+    state.expenses = state.expenses.filter(e => e.id !== id);
+    await saveData();
+    render();
+  };
+
+  window.clOpenModal = (name) => { ui.modal = name; render(); };
+  window.clCloseModal = () => { ui.modal = null; render(); };
+  window.clCloseModalBg = (e) => { if (e.target === e.currentTarget) window.clCloseModal(); };
+
+  window.clSaveNames = async () => {
+    const a = document.getElementById('cl-name-a').value.trim();
+    const b = document.getElementById('cl-name-b').value.trim();
+    if (a) state.partners.a.name = a;
+    if (b) state.partners.b.name = b;
+    ui.modal = null;
+    await saveData();
+    render();
+  };
+
+  window.clSettleUp = async () => {
+    const bal = computeBalance();
+    if (Math.abs(bal) >= 1){
+      const today = new Date();
+      const dateStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+      state.settlements.push({
+        id: uid(),
+        from: bal > 0 ? 'b' : 'a',
+        amount: Math.abs(bal),
+        date: dateStr,
+        createdAt: Date.now()
+      });
+    }
+    ui.modal = null;
+    await saveData();
+    render();
+  };
+
+  window.clResetAll = async () => {
+    state = defaultData();
+    ui.modal = null;
+    await saveData();
+    render();
+  };
+
+  loadData();
+})();
+</script>
