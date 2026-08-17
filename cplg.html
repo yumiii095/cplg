@@ -491,6 +491,20 @@
   <div id="cl-app"><div class="cl-loading"><div class="cl-spinner"></div><div>正在打開帳本…</div></div></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6v8hsuoc-DRhcKH7yAKU0_EhmGKLH_gw",
+    authDomain: "cplg-17b0a.firebaseapp.com",
+    projectId: "cplg-17b0a",
+    storageBucket: "cplg-17b0a.firebasestorage.app",
+    messagingSenderId: "784736250921",
+    appId: "1:784736250921:web:1fbf53b027db8be8eb0038"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.__cplgLedgerRef = firebase.firestore().collection('ledgers').doc('cplg-shared');
+</script>
 <script>
 (function(){
   const CATS = [
@@ -501,8 +515,7 @@
     {key:'home', icon:'🏠', label:'居家'},
     {key:'other', icon:'✨', label:'其他'},
   ];
-  const STORAGE_KEY = 'couple-ledger-data-v1';
-
+  const ledgerDocRef = window.__cplgLedgerRef;
   let state = null;      // {partners:{a:{name},b:{name}}, expenses:[], settlements:[]}
   let ui = {
     desc: '',
@@ -526,20 +539,30 @@
     };
   }
 
-  async function loadData(){
-    try {
-      const res = await window.storage.get(STORAGE_KEY, true);
-      state = res && res.value ? JSON.parse(res.value) : defaultData();
-    } catch (e) {
-      state = defaultData();
-    }
-    loaded = true;
-    render();
+  // Real-time listener: whenever either partner writes, both sides update automatically.
+  function startListening(){
+    ledgerDocRef.onSnapshot((snap) => {
+      if (snap.exists) {
+        state = snap.data();
+      } else {
+        state = defaultData();
+        ledgerDocRef.set(state).catch(e => console.error('初始化帳本失敗', e));
+      }
+      loaded = true;
+      render();
+    }, (err) => {
+      console.error('讀取帳本失敗', err);
+      if (!loaded){
+        state = defaultData();
+        loaded = true;
+        render();
+      }
+    });
   }
 
   async function saveData(){
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+      await ledgerDocRef.set(state);
     } catch (e) {
       console.error('儲存失敗', e);
     }
@@ -971,6 +994,6 @@
     render();
   };
 
-  loadData();
+  startListening();
 })();
 </script>
