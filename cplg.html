@@ -248,20 +248,17 @@
 }
 .cl-split-mode button.active { background: var(--surface-3); color: var(--text); border-color: var(--text-faint); }
 
-.cl-slider-wrap { padding: 4px 2px 0; }
-.cl-slider {
-  width: 100%;
-  accent-color: var(--text);
-  height: 4px;
-}
-.cl-split-labels {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  margin-top: 8px;
+.cl-advance-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
   color: var(--text-muted);
+  line-height: 1.5;
 }
+.cl-advance-note b { color: var(--text); font-weight: 600; }
 
 .cl-submit-btn {
   width: 100%;
@@ -568,6 +565,18 @@
     }
   }
 
+  // "墊付" (advance): the payer fronted the money entirely for the other person —
+  // the whole amount is owed back, it's not a shared 50/50 cost.
+  function computeAdvanceSplitA(paidBy){
+    return paidBy === 'a' ? 0 : 100; // A's own share of the expense
+  }
+
+  function advanceNoteHtml(nameA, nameB, paidBy){
+    const payer = paidBy === 'a' ? nameA : nameB;
+    const other = paidBy === 'a' ? nameB : nameA;
+    return `<b>${escapeHtml(payer)}</b> 全額墊付，之後由 <b>${escapeHtml(other)}</b> 全部歸還，不算平分。`;
+  }
+
   function computeBalance(){
     // positive => b owes a ; negative => a owes b
     let bal = 0;
@@ -655,8 +664,9 @@
         const rows = items.map(ex => {
           const cat = CATS.find(c=>c.key===ex.cat) || CATS[CATS.length-1];
           const payerName = ex.paidBy === 'a' ? nameA : nameB;
+          const otherName = ex.paidBy === 'a' ? nameB : nameA;
           const payerColor = ex.paidBy === 'a' ? 'var(--accent-a)' : 'var(--accent-b)';
-          const splitTxt = ex.splitA === 50 ? '平分' : `${escapeHtml(nameA)} ${ex.splitA}% / ${escapeHtml(nameB)} ${100-ex.splitA}%`;
+          const splitTxt = ex.mode === 'advance' ? `${escapeHtml(otherName)}需歸還全額` : '平分';
           return `
             <div class="cl-entry">
               <div class="cl-entry-icon">${cat.icon}</div>
@@ -751,14 +761,10 @@
           <label>怎麼分</label>
           <div class="cl-split-mode">
             <button id="cl-splitmode-equal" class="${ui.splitMode==='equal'?'active':''}" onclick="clSetSplitMode('equal')">平分</button>
-            <button id="cl-splitmode-custom" class="${ui.splitMode==='custom'?'active':''}" onclick="clSetSplitMode('custom')">墊付</button>
+            <button id="cl-splitmode-advance" class="${ui.splitMode==='advance'?'active':''}" onclick="clSetSplitMode('advance')">墊付</button>
           </div>
-          <div class="cl-slider-wrap" id="cl-slider-wrap" style="display:${ui.splitMode === 'custom' ? '' : 'none'}">
-            <input class="cl-slider" id="cl-split-slider" type="range" min="0" max="100" value="${ui.splitA}" oninput="clLiveSplitA(this.value)" onchange="clSetSplitA(this.value)" />
-            <div class="cl-split-labels">
-              <span id="cl-split-label-a">${escapeHtml(nameA)} ${ui.splitA}%</span>
-              <span id="cl-split-label-b">${escapeHtml(nameB)} ${100-ui.splitA}%</span>
-            </div>
+          <div class="cl-advance-note" id="cl-advance-note" style="display:${ui.splitMode === 'advance' ? '' : 'none'}">
+            ${advanceNoteHtml(nameA, nameB, ui.paidBy)}
           </div>
         </div>
         <button class="cl-submit-btn" onclick="clAddExpense()">加入帳本</button>
@@ -892,33 +898,25 @@
     ui.paidBy = p;
     const nextEl = document.getElementById('cl-paidby-' + p);
     if (nextEl) nextEl.classList.add('active');
+    // if in advance mode, who owes whom depends on who paid — keep it in sync
+    if (ui.splitMode === 'advance'){
+      ui.splitA = computeAdvanceSplitA(p);
+      const note = document.getElementById('cl-advance-note');
+      if (note) note.innerHTML = advanceNoteHtml(state.partners.a.name, state.partners.b.name, p);
+    }
   };
 
   window.clSetSplitMode = (m) => {
     if (ui.splitMode === m) return;
     document.getElementById('cl-splitmode-' + ui.splitMode).classList.remove('active');
     ui.splitMode = m;
-    if (m === 'equal') ui.splitA = 50;
+    ui.splitA = m === 'equal' ? 50 : computeAdvanceSplitA(ui.paidBy);
     document.getElementById('cl-splitmode-' + m).classList.add('active');
-    const wrap = document.getElementById('cl-slider-wrap');
-    if (wrap) wrap.style.display = m === 'custom' ? '' : 'none';
-    const slider = document.getElementById('cl-split-slider');
-    if (slider) slider.value = ui.splitA;
-    const nameA = state.partners.a.name, nameB = state.partners.b.name;
-    const la = document.getElementById('cl-split-label-a');
-    const lb = document.getElementById('cl-split-label-b');
-    if (la) la.textContent = `${nameA} ${ui.splitA}%`;
-    if (lb) lb.textContent = `${nameB} ${100 - ui.splitA}%`;
-  };
-  window.clSetSplitA = (v) => { ui.splitA = Number(v); render(); };
-  window.clLiveSplitA = (v) => {
-    // update labels directly while dragging so the slider element is never replaced mid-drag
-    ui.splitA = Number(v);
-    const nameA = state.partners.a.name, nameB = state.partners.b.name;
-    const la = document.getElementById('cl-split-label-a');
-    const lb = document.getElementById('cl-split-label-b');
-    if (la) la.textContent = `${nameA} ${ui.splitA}%`;
-    if (lb) lb.textContent = `${nameB} ${100 - ui.splitA}%`;
+    const note = document.getElementById('cl-advance-note');
+    if (note){
+      note.style.display = m === 'advance' ? '' : 'none';
+      note.innerHTML = advanceNoteHtml(state.partners.a.name, state.partners.b.name, ui.paidBy);
+    }
   };
 
   window.clAddExpense = async () => {
@@ -940,7 +938,8 @@
       desc, amount,
       cat: ui.catKey,
       paidBy: ui.paidBy,
-      splitA: ui.splitMode === 'equal' ? 50 : ui.splitA,
+      mode: ui.splitMode,
+      splitA: ui.splitMode === 'equal' ? 50 : computeAdvanceSplitA(ui.paidBy),
       date: dateStr,
       createdAt: Date.now()
     });
