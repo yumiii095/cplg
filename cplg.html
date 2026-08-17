@@ -750,8 +750,8 @@
         <div class="cl-field">
           <label>怎麼分</label>
           <div class="cl-split-mode">
-            <button id="cl-splitmode-equal" class="${ui.splitMode==='equal'?'active':''}" onclick="clSetSplitMode('equal')">平分 (AA)</button>
-            <button id="cl-splitmode-custom" class="${ui.splitMode==='custom'?'active':''}" onclick="clSetSplitMode('custom')">自訂比例</button>
+            <button id="cl-splitmode-equal" class="${ui.splitMode==='equal'?'active':''}" onclick="clSetSplitMode('equal')">平分</button>
+            <button id="cl-splitmode-custom" class="${ui.splitMode==='custom'?'active':''}" onclick="clSetSplitMode('custom')">墊付</button>
           </div>
           <div class="cl-slider-wrap" id="cl-slider-wrap" style="display:${ui.splitMode === 'custom' ? '' : 'none'}">
             <input class="cl-slider" id="cl-split-slider" type="range" min="0" max="100" value="${ui.splitA}" oninput="clLiveSplitA(this.value)" onchange="clSetSplitA(this.value)" />
