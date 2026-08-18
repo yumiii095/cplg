@@ -527,11 +527,18 @@ html, body {
     {key:'other', icon:'✨', label:'其他'},
   ];
   const ledgerDocRef = window.__cplgLedgerRef;
-  let state = null;      // {partners:{a:{name},b:{name}}, expenses:[], settlements:[]}
+  const expensesCol = ledgerDocRef.collection('expenses');
+  const settlementsCol = ledgerDocRef.collection('settlements');
+  const db = firebase.firestore();
+
+  // state.expenses / state.settlements are kept in sync live by their own
+  // listeners below — each entry is its own Firestore document, so adding
+  // or deleting one never overwrites the other partner's concurrent edits.
+  let state = { partners: defaultPartners(), expenses: [], settlements: [] };
   let ui = {
     desc: '',
     amount: '',
-    catKey: 'other',
+    catKey: 'food',
     paidBy: 'a',
     splitMode: 'equal',  // 'equal' | 'custom'
     splitA: 50,
@@ -542,41 +549,37 @@ html, body {
   const fmt = n => new Intl.NumberFormat('zh-TW', {maximumFractionDigits: 0}).format(Math.round(n));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
-  function defaultData(){
-    return {
-      partners: { a: { name: '阿翔' }, b: { name: '小美' } },
-      expenses: [],
-      settlements: []
-    };
+  function defaultPartners(){
+    return { a: { name: '羅' }, b: { name: '小櫻' } };
   }
 
-  // Real-time listener: whenever either partner writes, both sides update automatically.
+  // Real-time listeners: whenever either partner adds/removes something,
+  // both sides update automatically — no full-document overwrite.
   function startListening(){
     ledgerDocRef.onSnapshot((snap) => {
-      if (snap.exists) {
-        state = snap.data();
+      if (snap.exists && snap.data().partners) {
+        state.partners = snap.data().partners;
       } else {
-        state = defaultData();
-        ledgerDocRef.set(state).catch(e => console.error('初始化帳本失敗', e));
+        state.partners = defaultPartners();
+        ledgerDocRef.set({ partners: state.partners }, { merge: true })
+          .catch(e => console.error('初始化帳本失敗', e));
       }
       loaded = true;
       render();
     }, (err) => {
       console.error('讀取帳本失敗', err);
-      if (!loaded){
-        state = defaultData();
-        loaded = true;
-        render();
-      }
+      if (!loaded){ loaded = true; render(); }
     });
-  }
 
-  async function saveData(){
-    try {
-      await ledgerDocRef.set(state);
-    } catch (e) {
-      console.error('儲存失敗', e);
-    }
+    expensesCol.onSnapshot((snap) => {
+      state.expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, (err) => console.error('讀取支出失敗', err));
+
+    settlementsCol.onSnapshot((snap) => {
+      state.settlements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, (err) => console.error('讀取結清紀錄失敗', err));
   }
 
   // "墊付" (advance): the payer fronted the money entirely for the other person —
@@ -947,8 +950,7 @@ html, body {
     }
     const today = new Date();
     const dateStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-    state.expenses.push({
-      id: uid(),
+    const newExpense = {
       desc, amount,
       cat: ui.catKey,
       paidBy: ui.paidBy,
@@ -956,16 +958,22 @@ html, body {
       splitA: ui.splitMode === 'equal' ? 50 : computeAdvanceSplitA(ui.paidBy),
       date: dateStr,
       createdAt: Date.now()
-    });
-    ui.desc = ''; ui.amount = ''; ui.catKey = 'other'; ui.splitMode = 'equal'; ui.splitA = 50;
-    await saveData();
-    render();
+    };
+    ui.desc = ''; ui.amount = ''; ui.catKey = 'food'; ui.splitMode = 'equal'; ui.splitA = 50;
+    render(); // clear the form right away
+    try {
+      await expensesCol.doc(uid()).set(newExpense);
+    } catch (e) {
+      console.error('新增支出失敗', e);
+    }
   };
 
   window.clDeleteExpense = async (id) => {
-    state.expenses = state.expenses.filter(e => e.id !== id);
-    await saveData();
-    render();
+    try {
+      await expensesCol.doc(id).delete();
+    } catch (e) {
+      console.error('刪除支出失敗', e);
+    }
   };
 
   window.clOpenModal = (name) => { ui.modal = name; render(); };
@@ -975,36 +983,53 @@ html, body {
   window.clSaveNames = async () => {
     const a = document.getElementById('cl-name-a').value.trim();
     const b = document.getElementById('cl-name-b').value.trim();
-    if (a) state.partners.a.name = a;
-    if (b) state.partners.b.name = b;
+    const newPartners = {
+      a: { name: a || state.partners.a.name },
+      b: { name: b || state.partners.b.name }
+    };
     ui.modal = null;
-    await saveData();
     render();
+    try {
+      await ledgerDocRef.set({ partners: newPartners }, { merge: true });
+    } catch (e) {
+      console.error('儲存名字失敗', e);
+    }
   };
 
   window.clSettleUp = async () => {
     const bal = computeBalance();
+    ui.modal = null;
+    render();
     if (Math.abs(bal) >= 1){
       const today = new Date();
       const dateStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-      state.settlements.push({
-        id: uid(),
+      const settlement = {
         from: bal > 0 ? 'b' : 'a',
         amount: Math.abs(bal),
         date: dateStr,
         createdAt: Date.now()
-      });
+      };
+      try {
+        await settlementsCol.doc(uid()).set(settlement);
+      } catch (e) {
+        console.error('結清失敗', e);
+      }
     }
-    ui.modal = null;
-    await saveData();
-    render();
   };
 
   window.clResetAll = async () => {
-    state = defaultData();
     ui.modal = null;
-    await saveData();
     render();
+    try {
+      const [expSnap, setSnap] = await Promise.all([expensesCol.get(), settlementsCol.get()]);
+      const batch = db.batch();
+      expSnap.forEach(doc => batch.delete(doc.ref));
+      setSnap.forEach(doc => batch.delete(doc.ref));
+      batch.set(ledgerDocRef, { partners: defaultPartners() });
+      await batch.commit();
+    } catch (e) {
+      console.error('清除資料失敗', e);
+    }
   };
 
   startListening();
